@@ -1,0 +1,13 @@
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+seaborn>=0.13
+plotly>=5.20
+kaleido>=0.2.1
+jupyter>=1.0
+nbformat>=5.10
+nbconvert>=7.16
+scipy>=1.12
+statsmodels>=0.14
+scikit-learn>=1.4
+reportlab>=4.1
