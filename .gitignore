@@ -16,6 +16,7 @@ data/raw/transactions_clean.csv
 # Frontend
 web/node_modules/
 web/dist/
+web/tsconfig.tsbuildinfo
 static/
 .env
 

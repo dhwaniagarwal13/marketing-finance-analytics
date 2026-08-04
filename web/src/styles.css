@@ -1,0 +1,439 @@
+/*
+ * Theme roles, not raw hex.
+ *
+ * Dark values are declared under both the media query (OS setting) and the
+ * [data-theme] scope (explicit toggle), so the toggle wins in both directions:
+ * the :not() guard lets a light stamp beat OS-dark, and :where() keeps the
+ * media block at zero specificity so the toggle scope outranks it.
+ */
+
+:root {
+  color-scheme: light;
+
+  --surface: #fcfcfb;
+  --page: #f9f9f7;
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --success-text: #006300;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 10px;
+  --gap: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --page: #0d0d0d;
+    --ink: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --success-text: #0ca30c;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19;
+  --page: #0d0d0d;
+  --ink: #ffffff;
+  --ink-secondary: #c3c2b7;
+  --muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --success-text: #0ca30c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--page);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- layout */
+.shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.masthead h1 {
+  font-size: 20px;
+  font-weight: 650;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.masthead .sub {
+  color: var(--ink-secondary);
+  font-size: 13px;
+  margin: 2px 0 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn {
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  color: var(--ink);
+  border-color: var(--baseline);
+}
+
+.btn[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--baseline);
+}
+
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------- tiles */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: var(--gap);
+  margin: 20px 0;
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+}
+
+.tile .label {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Proportional figures: tabular-nums makes a large standalone number look loose. */
+.tile .value {
+  font-size: 26px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+.tile .basis {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.info {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: help;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* ----------------------------------------------------------------- cards */
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px 18px;
+  min-width: 0;
+}
+
+.card.wide {
+  grid-column: 1 / -1;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.card h2 {
+  font-size: 14px;
+  font-weight: 620;
+  margin: 0;
+}
+
+.card .note {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  margin: 2px 0 12px;
+}
+
+/* ----------------------------------------------------------------- table */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+th,
+td {
+  text-align: right;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+  font-variant-numeric: normal;
+}
+
+thead th {
+  color: var(--ink-secondary);
+  font-weight: 600;
+  border-bottom-color: var(--baseline);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+
+/* --------------------------------------------------------------- tooltip */
+.tooltip {
+  background: var(--surface);
+  border: 1px solid var(--baseline);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip .t-title {
+  color: var(--ink);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tooltip .t-row {
+  color: var(--ink-secondary);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip .t-row b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- states */
+.state {
+  color: var(--ink-secondary);
+  font-size: 13px;
+  padding: 28px 0;
+  text-align: center;
+}
+
+.state.err {
+  color: var(--status-critical);
+}
+
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--status-warning);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  margin-bottom: var(--gap);
+}
+
+.banner b {
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------- livebar */
+.livebar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  margin: 16px 0;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.livebar .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: none;
+}
+
+.livebar .dot.live {
+  background: var(--status-good);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.livebar .dot.paused {
+  background: var(--status-warning);
+}
+
+.livebar .dot.reconnecting,
+.livebar .dot.connecting {
+  background: var(--status-serious);
+}
+
+.livebar .dot.offline {
+  background: var(--status-critical);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.livebar-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+
+.cursor-date {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.livebar-progress {
+  flex: 1 1 140px;
+  min-width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.livebar-fill {
+  display: block;
+  height: 100%;
+  background: var(--status-good);
+  transition: width 400ms linear;
+}
+
+.livebar-meta {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.livebar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.livebar-note {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+/* Hold the previous render rather than flashing a skeleton on refetch. */
+.stale {
+  opacity: 0.55;
+  transition: opacity 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
