@@ -5,3 +5,19 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 *.egg-info/
+.pytest_cache/
+
+# Notebook 01 used to write these as a side effect, and generate_report.py read
+# them — so a fresh clone crashed. Cleaning now happens in-process in
+# analytics/quality.py; the files are outputs, not inputs.
+data/raw/campaigns_clean.csv
+data/raw/transactions_clean.csv
+
+# Frontend
+web/node_modules/
+web/dist/
+static/
+.env
+
+# Local agent tooling state, not project content
+.claude-flow/

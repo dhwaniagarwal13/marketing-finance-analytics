@@ -1,0 +1,70 @@
+[project]
+name = "marketing-finance-analytics"
+version = "0.1.0"
+description = "Marketing + finance analytics: a pure engine behind six notebooks, a PDF report, and a live web app."
+requires-python = ">=3.11"
+
+# The engine only. Deliberately excludes every plotting library — the web
+# runtime never renders a chart server-side, and keeping matplotlib, seaborn,
+# plotly and kaleido out of the image halves its size and removes the headless
+# Chromium dependency by construction rather than by discipline.
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+# Notebooks and PDF generation.
+nb = [
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "plotly>=5.20",
+    "kaleido>=0.2.1",
+    "jupyter>=1.0",
+    "nbformat>=5.10",
+    "nbconvert>=7.16",
+    "reportlab>=4.1",
+]
+
+# The deployed service. `reportlab` is here because PDF export runs in-process;
+# it is pure Python and ~2 MB, unlike the chart stack.
+web = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    "pydantic-settings>=2.2",
+    "reportlab>=4.1",
+]
+
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["analytics", "api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: spawns a real server; slower, and excluded by `-m 'not integration'`",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:starlette.*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

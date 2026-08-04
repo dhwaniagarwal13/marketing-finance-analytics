@@ -1,51 +1,82 @@
 """
-Shared KPI formulas and chart styling for the Marketing + Finance Analytics
-case study. Imported by every notebook so calculations and visuals stay
-consistent across the six-chapter analysis.
+Notebook-facing shim over the `analytics` engine.
+
+The palette and the KPI formulas now live in `analytics/palette.py` and
+`analytics/formulas.py` — pure data and pure functions, importable by the API
+without pulling in matplotlib, seaborn, plotly or kaleido.
+
+What stays here is everything that is *not* pure: the resolved project paths,
+the `reports/figures/` directory creation, the matplotlib/seaborn theme, and
+the mutation of `plotly.io.templates.default`. Those are genuinely useful in a
+notebook and genuinely unwanted in a web process, so this is the boundary.
+
+The public surface is unchanged, so `import utils as u` keeps working in all
+six notebooks and in `src/generate_report.py` with no edits.
+
+Removed: `ltv_simple` and `retention_rate`, which had no call sites.
 """
 
+from __future__ import annotations
+
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 import seaborn as sns
 
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# The engine is a top-level package at the repo root; notebooks only put `src/`
+# on the path, so make the root importable before reaching for it.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from analytics.formulas import (  # noqa: E402  (re-exported for notebooks)
+    cac,
+    contribution_margin,
+    cpa,
+    cpc,
+    ctr,
+    cvr,
+    fmt_currency,
+    fmt_pct,
+    roas,
+    roi,
+    safe_divide,
+)
+from analytics.palette import (  # noqa: E402  (re-exported for notebooks)
+    CATEGORICAL,
+    CHANNEL_COLOR_ORDER,
+    CHANNEL_COLORS,
+    CHROME,
+    DIVERGING,
+    SEQUENTIAL_BLUE,
+    STATUS,
+)
+
+__all__ = [
+    "PROJECT_ROOT", "DATA_RAW", "DATA_DB", "FIGURES_DIR",
+    "CATEGORICAL", "SEQUENTIAL_BLUE", "DIVERGING", "STATUS", "CHROME",
+    "CHANNEL_COLOR_ORDER", "CHANNEL_COLORS", "PLOTLY_TEMPLATE",
+    "apply_chart_theme", "save_fig",
+    "ctr", "cvr", "cpc", "cpa", "roas", "roi", "cac", "contribution_margin",
+    "safe_divide", "fmt_currency", "fmt_pct",
+]
+
+# ---------------------------------------------------------------------------
+# Paths (side effect: creates reports/figures/ on import)
+# ---------------------------------------------------------------------------
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 DATA_DB = PROJECT_ROOT / "data" / "marketing_finance.db"
 FIGURES_DIR = PROJECT_ROOT / "reports" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
+
 # ---------------------------------------------------------------------------
-# Palette (validated categorical / sequential / diverging / chrome roles)
+# Chart styling
 # ---------------------------------------------------------------------------
-CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
-               "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
-SEQUENTIAL_BLUE = ["#cde2fb", "#9ec5f4", "#5598e7", "#2a78d6", "#184f95"]
-DIVERGING = ["#e34948", "#f0efec", "#2a78d6"]          # red -> neutral -> blue
-STATUS = {"good": "#0ca30c", "warning": "#fab219",
-          "serious": "#ec835a", "critical": "#d03b3b"}
-
-CHROME = {
-    "surface": "#fcfcfb",
-    "primary_ink": "#0b0b0b",
-    "secondary_ink": "#52514e",
-    "muted": "#898781",
-    "gridline": "#e1e0d9",
-    "baseline": "#c3c2b7",
-}
-
-CHANNEL_COLOR_ORDER = ["Google Ads", "Facebook", "Instagram", "Email",
-                        "Affiliate", "TikTok", "Organic"]
-CHANNEL_COLORS = dict(zip(CHANNEL_COLOR_ORDER, CATEGORICAL))
-
-
 def apply_chart_theme():
     """Consistent matplotlib/seaborn theme: thin marks, recessive grid, no chart-junk."""
     sns.set_theme(style="white", rc={
@@ -77,9 +108,9 @@ PLOTLY_TEMPLATE = go.layout.Template(
         font=dict(family="system-ui, -apple-system, Segoe UI, sans-serif",
                   color=CHROME["primary_ink"], size=12),
         xaxis=dict(gridcolor=CHROME["gridline"], zerolinecolor=CHROME["baseline"],
-                    linecolor=CHROME["baseline"]),
+                   linecolor=CHROME["baseline"]),
         yaxis=dict(gridcolor=CHROME["gridline"], zerolinecolor=CHROME["baseline"],
-                    linecolor=CHROME["baseline"]),
+                   linecolor=CHROME["baseline"]),
         legend=dict(bgcolor="rgba(0,0,0,0)"),
     )
 )
@@ -95,67 +126,3 @@ def save_fig(fig, name: str, is_plotly: bool = False, width: int = 1200, height:
     else:
         fig.savefig(out_path, dpi=200, bbox_inches="tight", facecolor=CHROME["surface"])
     return out_path
-
-
-# ---------------------------------------------------------------------------
-# KPI formulas
-# ---------------------------------------------------------------------------
-def ctr(clicks, impressions):
-    """Click-through rate: clicks / impressions."""
-    return clicks / impressions.replace(0, np.nan)
-
-
-def cvr(conversions, clicks):
-    """Conversion rate: conversions / clicks."""
-    return conversions / clicks.replace(0, np.nan)
-
-
-def cpc(spend, clicks):
-    """Cost per click: spend / clicks."""
-    return spend / clicks.replace(0, np.nan)
-
-
-def cpa(spend, conversions):
-    """Cost per acquisition/conversion: spend / conversions."""
-    return spend / conversions.replace(0, np.nan)
-
-
-def roas(revenue, spend):
-    """Return on ad spend: revenue / spend."""
-    return revenue / spend.replace(0, np.nan)
-
-
-def roi(profit, spend):
-    """Return on investment: (profit - spend) / spend."""
-    return (profit - spend) / spend.replace(0, np.nan)
-
-
-def cac(spend_by_channel: pd.Series, new_customers_by_channel: pd.Series) -> pd.Series:
-    """Customer acquisition cost per channel: marketing spend / new customers acquired."""
-    return spend_by_channel / new_customers_by_channel.replace(0, np.nan)
-
-
-def contribution_margin(revenue, variable_cost):
-    """Contribution margin ratio: (revenue - variable_cost) / revenue."""
-    return (revenue - variable_cost) / revenue.replace(0, np.nan)
-
-
-def ltv_simple(avg_order_value, purchase_frequency, gross_margin, avg_lifespan_years):
-    """
-    Simplified customer lifetime value:
-    LTV = avg_order_value * purchase_frequency * gross_margin * avg_lifespan_years
-    """
-    return avg_order_value * purchase_frequency * gross_margin * avg_lifespan_years
-
-
-def retention_rate(active_end, active_start):
-    """Period-over-period retention rate: customers active at end / customers active at start."""
-    return active_end / active_start.replace(0, np.nan)
-
-
-def fmt_currency(x, decimals=0):
-    return f"${x:,.{decimals}f}"
-
-
-def fmt_pct(x, decimals=1):
-    return f"{x * 100:.{decimals}f}%"
