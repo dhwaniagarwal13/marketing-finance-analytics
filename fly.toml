@@ -1,0 +1,53 @@
+# fly.io deployment.
+#
+# Chosen over serverless because this service is genuinely stateful: it holds
+# long-lived SSE connections, keeps uploaded datasets in memory, and runs a
+# background ticker. Scale-to-zero would drop all three, and a 400-600 MB
+# scientific-Python dependency tree makes cold starts painful regardless.
+#
+#   fly launch --no-deploy      (first time only)
+#   fly deploy
+
+app = "marketing-finance-analytics"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  MFA_LOG_LEVEL = "info"
+  # A full snapshot measures ~1.1 s warm on a dev machine; shared-cpu-1x is
+  # slower, so the tick is 5 s here. Lower it once real timings are observed.
+  MFA_TICK_SECONDS = "5"
+  MFA_DAYS_PER_TICK = "7"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Never scale to zero: the replay cursor is reconstructible after a restart,
+  # but in-memory uploads are not, and a cold start on this image is slow
+  # enough that a visitor would assume the link is broken.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    # SSE connections are long-lived, so the limit is about sockets held open
+    # rather than requests per second.
+    soft_limit = 60
+    hard_limit = 100
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # ~600 MB worst case: the interpreter and scientific stack, the demo bundle,
+  # and up to MFA_MAX_DATASETS uploads at ~15 MB each. 1 GB leaves headroom;
+  # the dataset cap is what keeps this off the OOM killer.
+  memory = "1gb"
