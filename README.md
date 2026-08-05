@@ -368,6 +368,9 @@ top-to-bottom without manual intervention.
 
 ## Future Improvements
 
+See [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) for the build sequencing, scope
+decisions, and the reasoning behind this list.
+
 - Deploy the executive dashboard as a live Streamlit/Dash app instead of a
   static notebook export
 - Extend the forecasting model to SARIMA/Prophet once more than two years of
